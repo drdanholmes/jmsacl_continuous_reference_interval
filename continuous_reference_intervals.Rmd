@@ -65,9 +65,38 @@ renv::restore()
 ```
 
 ```{r data}
-library(readxl)
+library(openxlsx)
 library(dplyr)
-testo <- read_excel("data/raw_data.xlsx")
+testo <- read.xlsx("data/raw_data.xlsx")
+
+bat <- function(TT,SHBG,ALB=43){
+  Kalb <- 3.6*10^4
+  Kshbg <- 10^9
+  N <- 1+Kalb*ALB/69000
+  a <- N*Kshbg
+  b <- N+Kshbg*(SHBG-TT)/10^9
+  c <- -TT/10^9
+  FT <- (-b+sqrt(b^2-4*a*c))/(2*a)*10^9
+  bat <- N*FT
+  return(bat)
+}
+
+ft <- function(TT,SHBG,ALB=43){
+  Kalb <- 3.6*10^4
+  Kshbg <- 10^9
+  N <- 1+Kalb*ALB/69000
+  a <- N*Kshbg
+  b <- N+Kshbg*(SHBG-TT)/10^9
+  c <- -TT/10^9
+  FT <- (-b+sqrt(b^2-4*a*c))/(2*a)*10^9
+  return(FT)
+}
+
+testo$free_t_pmol_l <- ft(testo$t_nmol_l,testo$shbg_nmol_l)*1000
+testo$bat_nmol_l <- bat(testo$t_nmol_l,testo$shbg_nmol_l)
+if(!file.exists("data/raw_data_w_ft_bat.xlsx")){
+  write.xlsx(testo, "data/raw_data_w_ft_bat.xlsx")
+}
 ```
 
 # Introduction
@@ -96,11 +125,11 @@ To reproduce the analysis, the steps are to load the necessary R packages, impor
 
     ```{r}`r ''`
     # Load packages
-    library(readxl)
+    library(openxlsx)
     library(quantregGrowth)
     
     # Import Data
-    testo <- read_excel("data/raw_data.xlsx")
+    testo <- read.xlsx("data/raw_data_w_ft_bat.xlsx")
 
     # Split into Male and Female 
     male <- testo[testo$gender=='M',]
@@ -127,7 +156,6 @@ In figure \ref{fig:fig1}, we illustrate the effect of different smoothing values
 ```{r smoothingfi1, echo = F, warning=F, fig.width = 7, fig.height=6, fig.cap="\\label{fig:fig1}Comparison of different smoothing values ($\\lambda$) for continuous reference interval curves for testosterone in males. Upper curve (green) is 97.5th, median (red), and lower 2.5th (black)."}
 library(readxl)
 library(quantregGrowth)
-testo <- read_excel("data/raw_data.xlsx")
 
 tauss <- c(0.025,0.5,0.975)
 
@@ -369,7 +397,7 @@ We are not aware of free or bioavailable testosterone pediatric reference interv
 The strength of this study, and continuous reference intervals in general, is that we did not need to make any assumptions or arbitrary age partitions.  Non-parametric continuous intervals use all the data, are robust to outliers, and avoid large jumps between intervals at puberty.  Another advantage of continuous intervals is the ability to calculate point estimates for any age using the curve model.  For example, the lower, median, and upper limits for testosterone in a female aged 14.5, is determine with the code: `round(predict(fm, newdata = data.frame(age=14.5)),2)`, yielding: `r round(predict(fm, newdata = data.frame(age=14.5)),2)`; the model is `fm`, we add our age of interest as a `data.frame` and surround the call with `round` to get 2 decimal places (as opposed to the default 8).  This can be helpful in challenging cases and part of the discussion with a clinician.  Such models may also be shared as web applications (e.g. RShiny @shiny) to allow users to generate point estimates themselves.  Though it not possible to implement fully continuous age-dependent reference intervals into a laboratory information system, point estimates naturally permit reference interval estimates that are as granular as month-by-month or year-by-year.
 
 # Conclusion
-In this study, we established continuous reference intervals for T, SHBG, and calculated free and biovailable testosterone in males and females under the age of 20.  Reference intervals are an essential tool against which to evaluate results of individual patients for clinical decision-making.  Continuous reference intervals are a superior method for determining intervals where values vary with age.  Continuous intervals avoid problems with arbitrary age partitions, sharp differences between age group, and data sparsity.  In, particular non-parametric methods have advantages in using all of the data (rather than age partitions), does not require arbitrary removal of outliers, and is resistant to asymmetric, non-normality, and heteroscedastic (different variance with age) data @quantreg2.  We attempted to describe the process of generating such intervals in a reproducible way such that readers could derive their own continuous intervals for this or other analytes.
+In this study, we established continuous reference intervals for T, SHBG, and calculated free and biovailable testosterone in males and females under the age of 20.  Reference intervals are an essential tool against which to evaluate results of individual patients for clinical decision-making.  Continuous reference intervals are a superior method for determining intervals where values vary with age.  Continuous intervals avoid problems with arbitrary age partitions, sharp differences between age group, and data sparsity.  In, particular non-parametric methods have advantages in using all of the data (rather than age partitions), does not require arbitrary removal of outliers, and is resistant to asymmetric, non-normality, and heteroscedastic (different variance with age) data @quantreg2.  We attempted to describe the process of generating such intervals in a reproducible way such that readers could derive their own continuous intervals for this or other analytes. The source code for this paper can be downloaded at [https://github.com/drdanholmes/jmsacl_continuous_reference_interval](https://github.com/drdanholmes/jmsacl_continuous_reference_interval).
 
 # Conflicts of Interest
 

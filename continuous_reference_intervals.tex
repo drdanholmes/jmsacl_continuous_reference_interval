@@ -258,11 +258,11 @@ and 97.5) as shown below.
 \begin{verbatim}
 ```{r}
 # Load packages
-library(readxl)
+library(openxlsx)
 library(quantregGrowth)
 
 # Import Data
-testo <- read_excel("data/raw_data.xlsx")
+testo <- read.xlsx("data/raw_data_w_ft_bat.xlsx")
 
 # Split into Male and Female 
 male <- testo[testo$gender=='M',]
@@ -582,7 +582,8 @@ and is resistant to asymmetric, non-normality, and heteroscedastic
 (different variance with age) data {[}22{]}. We attempted to describe
 the process of generating such intervals in a reproducible way such that
 readers could derive their own continuous intervals for this or other
-analytes.
+analytes. The source code for this paper can be downloaded at
+\url{https://github.com/drdanholmes/jmsacl_continuous_reference_interval}.
 
 \hypertarget{conflicts-of-interest}{%
 \section{Conflicts of Interest}\label{conflicts-of-interest}}
