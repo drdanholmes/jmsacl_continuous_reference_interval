@@ -37,3 +37,9 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# Response to Reviewers
+response_to_reviewers/
+
+# renv files
+renv/
