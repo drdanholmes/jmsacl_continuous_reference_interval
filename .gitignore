@@ -43,3 +43,8 @@ response_to_reviewers/
 
 # renv files
 renv/
+
+# LaTeX files
+*.tex
+*.spl
+
