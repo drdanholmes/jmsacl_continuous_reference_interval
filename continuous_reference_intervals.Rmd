@@ -59,7 +59,7 @@ knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 60), tidy = TRUE)
 # this code was executed to create the renv snapshot and the renv.lock lockfile
 renv::init()
 renv::snapshot()
-# this line should be executed with an R project to obtain the historical R libraries used to build the project.
+y# this line should be executed with an R project to obtain the historical R libraries used to build the project.
 renv::init()
 renv::restore()
 ```
@@ -154,7 +154,6 @@ In R, formulae have a standard format of `dependent variable ~ predictor variabl
 In figure \ref{fig:fig1}, we illustrate the effect of different smoothing values for $\lambda$.  Setting a $\lambda$ smoothing term of zero shows overfitting, particularly >15 years old, whereas high $\lambda$ values tend to underfit the data in a way won't accurately predict testosterone at older ages.
 
 ```{r smoothingfi1, echo = F, warning=F, fig.width = 7, fig.height=6, fig.cap="\\label{fig:fig1}Comparison of different smoothing values ($\\lambda$) for continuous reference interval curves for testosterone in males. Upper curve (green) is 97.5th, median (red), and lower 2.5th (black)."}
-library(readxl)
 library(quantregGrowth)
 
 tauss <- c(0.025,0.5,0.975)
@@ -352,9 +351,9 @@ Of note, concern has been raised about incorrect application of the Hoffmann ind
 ```{r comparisonfig3, fig.cap = "\\label{fig:fig3}A graphical comparison of reference intervals for total tesotsterone by LC-MS/MS from various studies for male (A) and female (B) children. Lower and upper reference intervals for a given study are shown as horizontal lines.", fig.width = 5, fig.height=7}
 library(colorspace)
 study_names <- c("Kushnir", "Kyriakopoulou", "Bae", "Soldin", "Present")
-m_comparison_data <- read_xlsx("data/study_comparison.xlsx", sheet = "males") %>%
+m_comparison_data <- read.xlsx("data/study_comparison.xlsx", sheet = "males") %>%
   mutate(author = factor(author))
-f_comparison_data <- read_xlsx("data/study_comparison.xlsx", sheet = "females") %>%
+f_comparison_data <- read.xlsx("data/study_comparison.xlsx", sheet = "females") %>%
   mutate(author = factor(author))
 par(mfrow = c(2,1))
 par(oma=c(0, 0, 0, 0), mar=c(4, 4, 1, 2))
