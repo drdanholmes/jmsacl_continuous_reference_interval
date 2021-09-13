@@ -84,6 +84,7 @@ Laboratory} % Sets Journal name
 % Pandoc header
 \usepackage{float}
 \usepackage{url}
+\usepackage{caption}
 \usepackage{booktabs}
 \usepackage{longtable}
 \usepackage{array}
@@ -133,25 +134,26 @@ Ave., Department of Paediatric Laboratory Medicine, Toronto, ON, M5G
   
   \begin{abstract}
   Testosterone (T), sex hormone binding globulin (SHBG), free
-  testosterone (FT) and/or bioavailable testosterone (BAT) are common
-  tests in pediatric endocrinology. As with most tests, these analytes
-  required reference intervals for interpretation. Common methods to
-  derive reference intervals require decisions about data shape and/or
-  where to define partitions, which can result in sharp differences
-  between age groups, particularly in children undergoing puberty.
-  Partitioning also results in a form of data loss, where data from one
-  age bin is completed disconnected from the next age bin.
-  Non-parametric continuous reference intervals methods have previously
-  been developed to avoid some of these drawbacks. These strategies use
-  all the available data and smooth transitions between ages avoiding
-  partitioning. However, the fitting process inolves selection and
-  adjustment of many parameters and it can be difficult to sustain a
-  reproducible approach. Here we provide non-parametric continuous
-  reference intervals for T, FT, BAT, and SHBG. T measurements were
-  determine by LC-MS/MS, FT and BAT was calculated, and SHBG measured on
-  the Roche Cobas e601. The continuous interval methodology is described
-  in detail with code examples in the statistical programming language R
-  with and illustrations for reproducibililty.
+  testosterone (FT) and/or bioavailable testosterone (BAT) are commonly
+  employed tests in pediatric endocrinology and all require
+  age-dependent reference intervals for interpretation. The common
+  methods used to derive these reference intervals require decisions
+  about data shape and/or age partition thresholds, which can result in
+  sharp differences between age groups, particularly in children
+  undergoing puberty. Partitioning also results in a form of data loss,
+  where data from one age-bin is completed disconnected from the next
+  age-bin. Non-parametric continuous reference intervals methods have
+  previously been developed to avoid some of these drawbacks. These
+  strategies use all the available data and smooth transitions between
+  ages avoiding partitioning. However, the fitting process inolves
+  selection and adjustment of many parameters and it can be difficult to
+  sustain a reproducible approach. Here we provide a workflow for
+  non-parametric continuous reference intervals applied to T, FT, BAT,
+  and SHBG using the R language quantregGrowth package. T measurements
+  were determined by LC-MS/MS, FT and BAT were calculated, and SHBG was
+  measured on the Roche Cobas e601. The continuous interval methodology
+  is described in detail with code examples and illustrations for
+  reproducibililty.
   \end{abstract}
   
  \end{frontmatter}
@@ -203,11 +205,11 @@ were sequestered, anonymized and decanted to 12 x 75 mm polystyrene
 tubes and frozen at -80 \(^{\circ}\)C. No clinical exclusion criteria
 were applied to the cohort. These samples were then transferred to
 St.~Paul's Hospital laboratory for the analysis of T and SHBG. SHBG was
-measured within 2 months of receipt while testosterone analysis was
-delayed for 3 years. Stability studies for SHBG have shown only modest
-changes at -25 \(^{\circ}\)C for 25 years {[}16{]} while testosterone is
-similarly unaffected by years of storage at -80 \(^{\circ}\)C when
-measured by LC-MS/MS {[}17{]}.
+measured within 2 months of receipt while T analysis was delayed for 3
+years. Stability studies for SHBG have shown only modest changes at -25
+\(^{\circ}\)C for 25 years {[}16{]} while T is similarly unaffected by
+years of storage at -80 \(^{\circ}\)C when measured by LC-MS/MS
+{[}17{]}.
 
 \hypertarget{biochemical-analysis}{%
 \subsection{Biochemical Analysis}\label{biochemical-analysis}}
@@ -281,45 +283,45 @@ mm <- gcrq(t_nmol_l ~ ps(age,
 ```
 \end{verbatim}
 
-Breaking down the last lines of the above cross-validation call, we used
-the function for the continuous age-dependent centile curve,
+Breaking down the last lines of the cross-validation call shown above,
+we used the function for the continuous age-dependent centile curve,
 \texttt{gcrq}. The \texttt{gcrq} function, an acronym for
 \texttt{growth\ chart\ regression\ quantile}, is part of the
 \textbf{quantregGrowth} package and has a series required of arguments
-(also known as parameters). The \texttt{gcrq} function requirements are:
-1) the formula containing the variables of interest (age and
-testosterone), 2) the centile or centiles (the variable we've called
-\texttt{tauss}, which has the lower 2.5th, median, and upper 97.5) and
-3) the source dataframe with the variables, in this case \texttt{male}.
+(``parameters''). The \texttt{gcrq} function requirements are: 1) the
+formula containing the variables of interest (age and T), 2) the centile
+or centiles (the variable we've called \texttt{tauss}, which has the
+lower 2.5th, median, and upper 97.5) and 3) the source dataframe with
+the variables, in this case \texttt{male}.
 
 In R, formulae have a standard format of
 \texttt{dependent\ variable\ \textasciitilde{}\ predictor\ variable}. In
-our case, the dependent variable is testosterone (the column of data
-arbitrarily titled \texttt{t\_nmol\_l} in the dataframe). The predictor
-variable is age, but in this case it's embedded in another function,
-\texttt{ps()}, which is a spline. Splines will be familiar to most
-readers as a means to construct smooth curves. The smoothness and shape
-of the curve is determined by a series of piece-wise polynomials between
-fixed points or \textbf{knots}. There are as many options for the number
-of knots and polynomial order (linear, quadratic, cubic, etc.) as there
-are data points, which is not ideal for reproducible research. To
-address this, the \texttt{ps()} function uses a \textbf{penalized
-spline} with the option to perform cross-validation to automatically
-identify the \textbf{best} smoothness. In this case, \textbf{best} is
-the balance between fitting the line through each points and being too
-``wiggly'' (overfit). The \texttt{ps()} function determines smoothness
-using a penalty term, \(\lambda\), which is an error multiplier of how
-rough (wiggly) the curve is. The smaller the lambda, the smaller the
-penalty and the rougher the curve.
+our case, the dependent variable is T (the column of data arbitrarily
+titled \texttt{t\_nmol\_l} in the dataframe). The predictor variable is
+age, but in this case it's embedded in another function, \texttt{ps()},
+which is a spline. Splines will be familiar to most readers as a means
+to construct smooth curves. The smoothness and shape of the curve is
+determined by a series of piece-wise polynomials between fixed points or
+\textbf{knots}. There are as many options for the number of knots and
+polynomial order (linear, quadratic, cubic, etc.) as there are data
+points, which is not ideal for reproducible research. To address this,
+the \texttt{ps()} function uses a \textbf{penalized spline} with the
+option to perform cross-validation to automatically identify the
+\textbf{best} smoothness. In this case, \textbf{best} is the balance
+between fitting the line through each points and being too ``wiggly''
+(overfit). The \texttt{ps()} function determines smoothness using a
+penalty term, \(\lambda\), which is an error multiplier of how rough
+(wiggly) the curve is. The smaller the lambda, the smaller the penalty
+and the rougher the curve.
 
 In figure \ref{fig:fig1}, we illustrate the effect of different
 smoothing values for \(\lambda\). Setting a \(\lambda\) smoothing term
 of zero shows overfitting, particularly \textgreater15 years old,
 whereas high \(\lambda\) values tend to underfit the data in a way won't
-accurately predict testosterone at older ages.
+accurately predict T at older ages.
 
 \begin{figure}[H]
-\includegraphics{smoothingfi1-1} \caption{\label{fig:fig1}Comparison of different smoothing values ($\lambda$) for continuous reference interval curves for testosterone in males. Upper curve (green) is 97.5th, median (red), and lower 2.5th (black).}\label{fig:smoothingfi1}
+\includegraphics{smoothingfig1-1} \caption{\label{fig:fig1}Comparison of different smoothing values ($\lambda$) for continuous reference interval curves for T in males. Upper curve (green) is 97.5th, median (red), and lower 2.5th (black).}\label{fig:smoothingfig1}
 \end{figure}
 
 Instead of manually picking \(\lambda\), in the \texttt{ps} function
@@ -327,13 +329,13 @@ above, we provided a sequence of numbers, coded as:
 \texttt{lambda\ =\ seq(0,10,l=50)}, which is simply a sequence of
 numbers from 0 to 10 of length 50 (0, 0.2, 0.4, \ldots, 9.8, 10). By
 feeding \texttt{ps()} a sequence of numbers, the \texttt{gcrq} fitting
-function will calculate the testosterone vs.~age curve for all those
-\(\lambda\) smoothing values and identify the optimum (smoothest curve
-that still passes closest to the points) using cross-validation. In the
+function will calculate the T vs.~age curve for all those \(\lambda\)
+smoothing values and identify the optimum (smoothest curve that still
+passes closest to the points) using cross-validation. In the
 cross-validation, the curve is calculated using a subset of data points
 and the accuracy of the fit of the left out points is assessed
-iteratively. Using cross-validation, the optimum \(\lambda\) value for
-testosterone in males was 1.6.
+iteratively. Using cross-validation, the optimum \(\lambda\) value for T
+in males was 1.6.
 
 While cross-validation selects an optimum, complete automation is seldom
 perfect and it is appropriate to visually inspect the results and use
@@ -342,11 +344,12 @@ parameter. Specifically, we know what the reference values are in adults
 and should use that knowledge to tune the fit if necessary. To improve
 the fit at the tails (age \textless1 and \textgreater18), the smoothing
 parameter (\(\lambda\)) was optimized manually by adjusting the initial
-values based on visual inspection of the curve. While this is
-subjective, it was determined with relative ease because we started with
-an optimal value of the cross-validation. Occasionally the optimal value
-will represent the data well and require no adjustment. In the present
-analysis, only SHBG in females required no additional tuning.
+values based on visual inspection of the curve -- see supplemental table
+1. While this is subjective, it was determined with relative ease
+because we started with an optimal value of the cross-validation.
+Occasionally the optimal value will represent the data well and require
+no adjustment. In the present analysis, only SHBG required no additional
+tuning.
 
 For completeness, the above description is one way to do the
 cross-validation. There are many other ways to do this using the
@@ -361,7 +364,7 @@ Lastly, the confidence intervals (95\%) of the fits were determined
 using the sandwich formula built into the \textbf{quantregGrowth}
 package {[}24{]} but bootstrapping can optionally be selected.
 Confidence intervals with shading are plotted using with the code:
-\texttt{plot(mm,\ conf.level\ =\ .95,\ shade\ =\ T)} Negative interval
+\texttt{plot(mm,\ conf.level\ =\ .95,\ shade\ =\ T)}. Negative interval
 predictions were rounded to zero.
 
 \hypertarget{results}{%
@@ -370,19 +373,19 @@ predictions were rounded to zero.
 Continuous intervals were determined for males and females between the
 ages of 6 months to 19 years for females (N=195) and 1 month to 19 years
 for males (N=226)---see tables \ref{tab:tab1} and \ref{tab:tab2} as well
-as figure \ref{fig:fig1}. Intervals were calculated using non-parametric
+as figure \ref{fig:fig2}. Intervals were calculated using non-parametric
 quantile regression for total T, SHBG, calculated free and bioavailable
 T. In both males and females, T values peaked in the age range of
 puberty, males being \(\simeq 10 \times\) higher. SHBG showed varying
 patterns with age, differing between males and females.
 
 Confidence intervals were provided for the reference interval estimates,
-with higher variability around the tails of the intervals. Prediction
+with higher variability around the tails of the intervals. Predictions
 outside the age interval (extrapolation) are not expected to be accurate
 given the absence of data.
 
 \begin{figure}[H]
-\includegraphics{quantregfitsfig2-1} \caption{\label{fig:fig2}Non-parametric continuous pediatric reference intervals for testosterone, SHBG, BAT and FT in males (left) and females (right) showing confidence intervals calculated using the sandwich formula [15].}\label{fig:quantregfitsfig2}
+\includegraphics{quantregfitsfig2-1} \caption{\label{fig:fig2}Non-parametric continuous pediatric reference intervals for T, SHBG, BAT and FT in males (left) and females (right) showing confidence intervals calculated using the sandwich formula [15]. The initial optimum and final lambda values are providied in Supplemental Table 1.}\label{fig:quantregfitsfig2}
 \end{figure}
 
 \begin{table}[H]
@@ -464,23 +467,23 @@ Age(y) & 2.5th & 50th & 97.5th & 2.5th & 50th & 97.5th & 2.5th & 50th & 97.5th &
 \hypertarget{discussion}{%
 \section{Discussion}\label{discussion}}
 
-We have determined continuous age-dependent reference intervals for T,
-SHBG, FT and calculated BAT for male and female children under 20 years.
-Only a few studies have investigated total T reference intervals using
-LC-MS/MS in pediatric populations {[}1,4--7{]}. A graphical comparison
-of these is shown in figure \ref{fig:fig3} showing reasonable agreement
-among the studies bearing in mind that the statistical analyses are
-performed differently and samples are differentially binned into
-age-categories. However, figure \ref{fig:fig3} also starkly illustrates
-the problem with binned reference interval studies, namely, that there
-are large jumps in the reference intervals seen when transitioning from
-one age-bin to the next. Obviously this does not reflect physiology and
-would induce misclassification with increasing frequency as bin sizes
-grow. For example in both the studies of Soldin {[}1{]} and Bae {[}7{]},
-a large jump of \(\simeq 17-25\) nmol/L is seen in the upper limit of
-normal for boys after the age of 10 y and a similar phenomenon is seen
-in Kushnir's study {[}5{]}, attenuated somewhat by the narrower bin
-sizes.
+We have demonstrated the process of generating continuous reference
+intervals using a pediatric dataset for T, SHBG, FT and calculated BAT
+for male and female children under 20 years. Only a few studies have
+investigated total T reference intervals using LC-MS/MS in pediatric
+populations {[}1,4--7{]}. A graphical comparison of these is shown in
+figure \ref{fig:fig3} showing reasonable agreement among the studies
+bearing in mind that the statistical analyses are performed differently
+and samples are differentially binned into age-categories. However,
+figure \ref{fig:fig3} also starkly illustrates the problem with binned
+reference interval studies, namely, that there are large jumps in the
+reference intervals seen when transitioning from one age-bin to the
+next. Obviously this does not reflect physiology and would induce
+misclassification with increasing frequency as bin sizes grow. For
+example in both the studies of Soldin {[}1{]} and Bae {[}7{]}, a large
+jump of \(\simeq 17-25\) nmol/L is seen in the upper limit of normal for
+boys after the age of 10 y and a similar phenomenon is seen in Kushnir's
+study {[}5{]}, attenuated somewhat by the narrower bin sizes.
 
 Of note, concern has been raised about incorrect application of the
 Hoffmann indirect method leading to inappropriately narrow reference
@@ -503,9 +506,9 @@ subsequent study from the same group as Kyriakopoulou et al {[}27{]}
 using Roche Cobas 8000 for both T and SHBG. The phenomenon of
 mini-puberty is a potential hazard in continuous fitting algorithms
 because the age window where mini-puberty occurs is so narrow and the
-androgen concentrations so relatively high that the modeled centile
-functions may have a shallower slope than is required to accurately
-reflect physiology. In this sense a dedicated (i.e.~binned) analysis of
+androgen concentrations so high that the modeled centile functions may
+have a shallower slope than is required to accurately reflect
+physiology. In this context, a dedicated (i.e.~binned) analysis of
 results for patients less than 1 year of age may be warranted.
 
 Another weakness of this study is that androgen and SHBG concentration
@@ -519,11 +522,11 @@ concentrations by age are not fixed at 43 g/L throughout life but show
 age-dependence, being lower in early childhood--especially in the
 neonatal period and in children under 4 years {[}28{]}. While we
 acknowledge this, attempts to address it would not have practical
-impact. The Vermeulen equation itself is really a \emph{metric} of free
-testosterone calculated by means of mass-action using estimates of the
-binding coefficients of albumin and SHBG from studies now quite old
-{[}29{]} and estimates of FT and BAT are not strongly affected by
-albumin concentration. In this sense, we make the assumption that if the
+impact. The Vermeulen equation itself is really a \emph{metric} of FT
+calculated by means of mass-action using estimates of the binding
+coefficients of albumin and SHBG from studies now quite old {[}29{]} and
+estimates of FT and BAT are not strongly affected by albumin
+concentration. In this sense, we make the assumption that if the
 reference intervals are determined with the same albumin estimates as
 the patient, then results will be interpretable, though not applicable
 to other analytical methodologies.
@@ -540,10 +543,20 @@ comparison is not possible. The more recent study from the CALIPER group
 were not diluted and re-run so as to obtain a numerical result--all
 results \(>200\) are replaced with 200.
 
-We are not aware of free or bioavailable testosterone pediatric
-reference interval studies using LC-MS/MS for the T measurement though
-results for the Roche Cobas e411 {[}30{]} and Abbott Architect ci4100
-are reported {[}31{]}.
+We are not aware of FT or BAT pediatric reference interval studies using
+LC-MS/MS for the T measurement though results for the Roche Cobas e411
+{[}30{]} and Abbott Architect ci4100 are reported {[}31{]}.
+
+A limitation of continuous reference intervals (and fitting any models
+with tuneable parameters) is the subjectivity of selection of the
+parameters. In this manuscript the initial `smoothing' parameter
+\(\lambda\) was often sub-optimal based on visual inspection. As a
+result most of these were subjectively manually chosen based on the
+`best' appearing curve (no sharp increase or decreases in the tail age
+groups that were inconsistent with known effects of age). By comparison,
+parametric and non-parametric methods don't have smoothing options and
+avoid the problem, but conversely suffer subjectivity in the selection
+of age partitions themselves.
 
 The strength of this study, and continuous reference intervals in
 general, is that we did not need to make any assumptions or arbitrary
@@ -551,8 +564,8 @@ age partitions. Non-parametric continuous intervals use all the data,
 are robust to outliers, and avoid large jumps between intervals at
 puberty. Another advantage of continuous intervals is the ability to
 calculate point estimates for any age using the curve model. For
-example, the lower, median, and upper limits for testosterone in a
-female aged 14.5, is determine with the code:
+example, the lower, median, and upper limits for T in a female aged
+14.5, is determine with the code:
 \texttt{round(predict(fm,\ newdata\ =\ data.frame(age=14.5)),2)},
 yielding: 0.06, 0.56, 1.49; the model is \texttt{fm}, we add our age of
 interest as a \texttt{data.frame} and surround the call with
@@ -568,27 +581,45 @@ as granular as month-by-month or year-by-year.
 \hypertarget{conclusion}{%
 \section{Conclusion}\label{conclusion}}
 
-In this study, we established continuous reference intervals for T,
-SHBG, and calculated free and biovailable testosterone in males and
-females under the age of 20. Reference intervals are an essential tool
-against which to evaluate results of individual patients for clinical
-decision-making. Continuous reference intervals are a superior method
-for determining intervals where values vary with age. Continuous
-intervals avoid problems with arbitrary age partitions, sharp
-differences between age group, and data sparsity. In, particular
-non-parametric methods have advantages in using all of the data (rather
-than age partitions), does not require arbitrary removal of outliers,
-and is resistant to asymmetric, non-normality, and heteroscedastic
-(different variance with age) data {[}22{]}. We attempted to describe
-the process of generating such intervals in a reproducible way such that
-readers could derive their own continuous intervals for this or other
-analytes. The source code for this paper can be downloaded at
-\url{https://github.com/drdanholmes/jmsacl_continuous_reference_interval}.
+In this study, we demonstrated the calculation of continuous reference
+intervals for T, SHBG, and calculated free and biovailable T in males
+and females under the age of 20 using the \textbf{quantregGrowth}
+package. Reference intervals are an essential tool against which to
+evaluate results of individual patients for clinical decision-making.
+Continuous reference intervals are a superior method for determining
+intervals where values vary with age. Continuous intervals avoid
+problems with arbitrary age partitions, sharp differences between age
+group, and data sparsity. In, particular non-parametric methods have
+advantages in using all of the data (rather than age partitions), do not
+require arbitrary removal of outliers, and are resistant to asymmetric,
+non-normality, and heteroscedastic data {[}22{]}. We attempted to
+describe the process of generating such intervals in a reproducible way
+such that readers could derive their own continuous intervals for this
+or other analytes. The RMarkdown source code and raw data for this paper
+can be downloaded at
+\url{https://github.com/drdanholmes/jmsacl_continuous_reference_interval}
+and in the supplementary material.
 
 \hypertarget{conflicts-of-interest}{%
 \section{Conflicts of Interest}\label{conflicts-of-interest}}
 
 The authors have no relevant conflicts of interest to disclose.
+
+\hypertarget{supplemental-data}{%
+\section{Supplemental Data}\label{supplemental-data}}
+
+\begin{table}[]
+\caption*{Supplemental Table 1: Initial and Final Smoothing (lambda) Values}
+\label{tab:my-table}
+\begin{tabular}{l|llll}
+                          & \multicolumn{2}{l}{Male $\lambda$} & \multicolumn{2}{l}{Female $\lambda$} \\ \cline{2-5} 
+Hormone                   & Initial       & Final          & Initial        & Final            \\ \hline
+T                         & 1.6           & 0.4            & 0.8            & 0.7              \\
+BAT                       & 2.0           & 0.6            & 8.1            & 0.6              \\
+FT                        & 0.4           & 0.6            & 8.0            & 0.6              \\
+SHBG                      & 0.4           & unchanged      & 4.2            & unchanged       
+\end{tabular}
+\end{table}
 
 \hypertarget{references}{%
 \section*{References}\label{references}}
