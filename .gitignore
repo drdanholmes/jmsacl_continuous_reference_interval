@@ -48,3 +48,6 @@ renv/
 *.tex
 *.spl
 
+# MS Word
+*.docx
+

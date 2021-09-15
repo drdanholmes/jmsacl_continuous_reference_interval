@@ -68,6 +68,7 @@ renv::restore()
 ```{r data}
 library(openxlsx)
 library(dplyr)
+library(emdbook)
 testo <- read.xlsx("data/raw_data.xlsx")
 
 bat <- function(TT,SHBG,ALB=43){
@@ -142,24 +143,25 @@ To reproduce the analysis, the steps are to load the necessary R packages, impor
     #Call for cross-validation with a range of lambda smoothing values in Males:
     mm <- gcrq(t_nmol_l ~ ps(age,
                     mon = 0,
-                    lambda = seq(0, 100, l = 25)),
-      tau = tauss,
-      data = male,
-      cv = T)
+                    lambda = lseq(0.01, 30, l = 25)),
+                    nfolds = nrow(male)-1,
+                    tau = tauss,
+                    data = male,
+                    cv = T)
     ```
     
 Breaking down the last lines of the cross-validation call shown above, we used the function for the continuous age-dependent centile curve, `gcrq`.  The `gcrq` function, an acronym for `growth chart regression quantile`, is part of the **quantregGrowth** package and has a series required of arguments ("parameters").  The `gcrq` function requirements are: 1) the formula containing the variables of interest (age and T), 2) the centile or centiles (the variable we've called `tauss`, which has the lower 2.5th, median, and upper 97.5) and 3) the source dataframe with the variables, in this case `male`.  
 
-In R, formulae have a standard format of `dependent variable ~ predictor variable`.  In our case, the dependent variable is T (the column of data arbitrarily titled `t_nmol_l` in the dataframe). The predictor variable is age, but in this case it's embedded in another function, `ps()`, which is a spline.  Splines will be familiar to most readers as a means to construct smooth curves.  The smoothness and shape of the curve is determined by a series of piece-wise polynomials between fixed points or **knots**.  There are as many options for the number of knots and polynomial order (linear, quadratic, cubic, etc.) as there are data points, which is not ideal for reproducible research.  To address this, the `ps()` function uses a **penalized spline** with the option to perform cross-validation to automatically identify the **best** smoothness.  In this case, **best** is the balance between fitting the line through each points and being too "wiggly" (overfit).  The `ps()` function determines smoothness using a penalty term, $\lambda$, which is an error multiplier of how rough (wiggly) the curve is.   The smaller the lambda, the smaller the penalty and the rougher the curve.   
+In R, formulae have a standard format of `dependent variable ~ predictor variable`.  In our case, the dependent variable is T (the column of data arbitrarily titled `t_nmol_l` in the dataframe). The predictor variable is age, but in this case it's embedded in another function, `ps()`, which is a spline.  Splines will be familiar to most readers as a means to construct smooth curves.  The smoothness and shape of the curve is determined by a series of piece-wise polynomials between fixed points or **knots**.  There are as many options for the number of knots and polynomial order (linear, quadratic, cubic, etc.) as there are data points, which is not ideal for reproducible research.  To address this, the `ps()` function uses a **penalized spline** with the option to perform cross-validation to automatically identify the **best** smoothness.  In this case, **best** is the balance between fitting the line through each points and being too "wiggly" (overfit).  The `ps()` function determines smoothness using a penalty term, $\lambda$, which is an error multiplier of how rough (wiggly) the curve is.   The smaller the lambda, the smaller the penalty and the rougher the curve.  The term `nfolds` refers to the number of groups for cross-validation.  By setting it to the sample size minus one, it is leave one out cross-over validation (each data point is excluded in turn and tested for fit). 
 
-In figure \ref{fig:fig1}, we illustrate the effect of different smoothing values for $\lambda$.  Setting a $\lambda$ smoothing term of zero shows overfitting, particularly >15 years old, whereas high $\lambda$ values tend to underfit the data in a way won't accurately predict T at older ages.
+In figure 1, we illustrate the effect of different smoothing values for $\lambda$.  Setting a $\lambda$ smoothing term of zero shows overfitting, particularly >15 years old, whereas high $\lambda$ values tend to underfit the data in a way won't accurately predict T at older ages.
 
 ```{r smoothingfig1, echo = F, warning=F, fig.width = 7, fig.height=6, fig.cap="\\label{fig:fig1}Comparison of different smoothing values ($\\lambda$) for continuous reference interval curves for T in males. Upper curve (green) is 97.5th, median (red), and lower 2.5th (black)."}
 library(quantregGrowth)
 
 tauss <- c(0.025,0.5,0.975)
 
-#cross-validation with a range of lambda smoothing values
+#Comparison of a range of lambda smoothing values
 male <- testo[testo$gender=='M',]
 female <- testo[testo$gender=='F',]
 
@@ -185,22 +187,20 @@ plot(mm4, xlab = 'age', res = T, las = 1, yaxt = 'n', ylim = c(0,33), lwd = 2, l
 text(x = 1, y = 30, adj = 0,expression(lambda*' = 10'), cex = 1.3, col = 'blue')
 mtext(side = 1, line = 2, adj = 0, at = -5, cex = 1, 'Age (years)')
 
-#Use cross-validation to determine initial lambda value in Males for methods section inline code illustration
-set.seed(1)
-mm <- gcrq(t_nmol_l ~ ps(age, mon = 0,lambda = seq(0,10,l = 50)), tau=tauss, data=male, cv=T)
+mm <- gcrq(t_nmol_l ~ ps(age, mon = 0,lambda = lseq(0.01,30,l = 20)), nfolds=nrow(male)-1, tau=tauss, data=male, cv=T)
 ```
-Instead of manually picking $\lambda$, in the `ps` function above, we provided a sequence of numbers, coded as: `lambda = seq(0,10,l=50)`, which is simply a sequence of numbers from 0 to 10 of length 50 (0, 0.2, 0.4, ..., 9.8, 10). By feeding `ps()` a sequence of numbers, the `gcrq` fitting function will calculate the T vs. age curve for all those $\lambda$ smoothing values and identify the optimum (smoothest curve that still passes closest to the points) using cross-validation. In the cross-validation, the curve is calculated using a subset of data points and the accuracy of the fit of the left out points is assessed iteratively.  Using cross-validation, the optimum $\lambda$ value for T in males was 1.6.
+Instead of manually picking $\lambda$, in the `ps` function above, we provided a sequence of numbers, coded as: `lambda = lseq(0.01,30,l=20)`, which is a logarithmic sequence of numbers from 0.01 to 30 of length 20 (0.01, 0.014, 0.0.19, ..., 21.49, 30). By feeding `ps()` this sequence of numbers, the `gcrq` fitting function will calculate the T vs. age curve for all those $\lambda$ smoothing values and identify the optimum (smoothest curve that still passes closest to the points) using cross-validation. In the cross-validation, the curve is calculated using a subset of data points and the accuracy of the fit of the left out points is assessed iteratively.  Using cross-validation, the optimum $\lambda$ value for T in males was 0.19.
 
-While cross-validation selects an optimum, complete automation is seldom perfect and it is appropriate to visually inspect the results and use our knowledge of the expected data shape to hone the smoothing parameter.  Specifically, we know what the reference values are in adults and should use that knowledge to tune the fit if necessary. To improve the fit at the tails (age <1 and >18), the smoothing parameter ($\lambda$) was optimized manually by adjusting the initial values based on visual inspection of the curve -- see supplemental table 1.  While this is subjective, it was determined with relative ease because we started with an optimal value of the cross-validation.  Occasionally the optimal value will represent the data well and require no adjustment.  In the present analysis, only SHBG required no additional tuning.  
+While cross-validation selects an optimum based on error residuals, complete automation is seldom perfect and it is appropriate to visually inspect the results and use our knowledge of the expected data shape to hone the smoothing parameter.  Specifically, we know what the reference values are in adults and should use that knowledge to tune the fit if necessary. To improve the fit at the tails (age <1 y and >18 y), the final smoothing parameter ($\lambda$) was adjusted manually from the initial values based on visual inspection of the curve -- see supplemental table 1.  While this is subjective, it was determined with relative ease because we started with an optimal value of the cross-validation. 
 
 For completeness, the above description is one way to do the cross-validation. There are many other ways to do this using the **quantregGrowth** package, including defining a penalty matrix, weighting observations, selecting different types of spline (linear, quadratic), choosing the exact location of knots, forcing the curve to continuously increase or decrease, and forcing the curve shape to be concave-up or concave-down.  The interested reader is referred to the package documentation [@quantreg1;@quantreg2].
 
 
-Lastly, the confidence intervals (95%) of the fits were determined using the sandwich formula built into the **quantregGrowth** package @hardin2003sandwich but bootstrapping can optionally be selected. Confidence intervals with shading are plotted using with the code: `plot(mm, conf.level = .95, shade = T)`. Negative interval predictions were rounded to zero.
+The confidence intervals (95%) of the fits were determined using the sandwich formula built into the **quantregGrowth** package @hardin2003sandwich but bootstrapping can optionally be selected. Confidence intervals with shading are plotted using with the code: `plot(mm, conf.level = .95, shade = T)`. Negative interval predictions were rounded to zero. Finally, the manuscript was made reproducible using the **renv** package @renvpackage.
 
 # Results
 
-Continuous intervals were determined for males and females between the ages of 6 months to 19 years for females (N=`r testo %>% filter(gender == "F") %>% nrow`) and 1 month to 19 years for males (N=`r testo %>% filter(gender == "M") %>% nrow`)---see tables \ref{tab:tab1} and \ref{tab:tab2} as well as figure \ref{fig:fig2}.  Intervals were calculated using non-parametric quantile regression for total T, SHBG, calculated free and bioavailable T.  In both males and females, T values peaked in the age range of puberty, males being $\simeq 10 \times$ higher.  SHBG showed varying patterns with age, differing between males and females.
+Continuous intervals were determined for males and females between the ages of 6 months to 19 years for females (N=`r testo %>% filter(gender == "F") %>% nrow`) and 1 month to 19 years for males (N=`r testo %>% filter(gender == "M") %>% nrow`)---see tables \ref{tab:tab1} and \ref{tab:tab2} as well as figure 2.  Intervals were calculated using non-parametric quantile regression for total T, SHBG, calculated free and bioavailable T.  In both males and females, T values peaked in the age range of puberty, males being $\simeq 10 \times$ higher.  SHBG showed varying patterns with age, differing between males and females.
 
 
 Confidence intervals were provided for the reference interval estimates, with higher variability around the tails of the intervals.  Predictions outside the age interval (extrapolation) are not expected to be accurate given the absence of data. 
@@ -209,49 +209,55 @@ Confidence intervals were provided for the reference interval estimates, with hi
 
 tauss <- c(0.025, 0.5, 0.975)
 
-#cross-validation with a range of lambda smoothing values
+# cross-validation with a range of lambda smoothing values
 # male <- testo[testo$gender == 'M',]
 # female <- testo[testo$gender == 'F',]
 
-set.seed(1)
 #Testosterone ####
 #Use cross-validation to determine initial lambda value
-#Tweak final lambda manually using knowledge of curve and adult values (i.e. ever increasing is nonsensical)
+#Tweak final lambda manually using knowledge of curve and adult values (i.e. ever increasing T is nonsensical)
 
 ##Males
-# mm <-gcrq(t_nmol_l~ps(age, mon=0,lambda=seq(0, 100, l=25)), tau=tauss, data=male,cv=T)
+# mm <-gcrq(t_nmol_l~ps(age, mon=0,lambda=lseq(0.01, 30, 20)), nfolds = nrow(male)-1, tau=tauss, data=male,cv=T)
+# mm$lambda #is 0.191
 # plot(mm, cv=TRUE, las=1) #display CV score versus lambda values
-# plot(mm,pch='.', res=T, las=1, xlab='Age (years)', ylab='Testosterone (nmol/L)') #plot fit with the best lambda value
+#plot(mm,pch='.', res=T, las=1, xlab='Age (years)', ylab='Testosterone (nmol/L)') #plot fit with the best lambda value
 mm <- gcrq(t_nmol_l ~ ps(age, mon = 0,lambda = 0.4), tau = tauss, data = male, cv = T)
 
 ##Females
-# fm <-gcrq(t_nmol_l ~ ps(age, mon=0,lambda=seq(0, 100, l=25)), tau=tauss, data=female,cv=T)
+# fm <-gcrq(t_nmol_l~ps(age, mon=0,lambda=lseq(0.01, 30, 20)), nfolds = nrow(female)-1, tau=tauss, data=female,cv=T)
+# fm$lambda #is 12.91
 # plot(fm, cv=TRUE, las=1) #display CV score versus lambda values
 # plot(fm,pch='.', res=T, las=1, xlab='Age (years)', ylab='Testosterone (nmol/L)') #plot fit with the best lambda value
 fm <- gcrq(t_nmol_l ~ ps(age, mon = 0,lambda = 0.7), tau = tauss, data = female, cv = T)
 
 #SHBG ####
 ##Males
-# mm_shbg <-gcrq(shbg_nmol_l ~ ps(age, mon=0,lambda=seq(0, 100, l=25)), tau=tauss, data=male,cv=T)
+# mm_shbg <-gcrq(shbg_nmol_l~ps(age, mon=0,lambda=lseq(0.01, 30, 20)), nfolds = nrow(male)-1, tau=tauss, data=male,cv=T)
+# mm_shbg$lambda #is 0.08223
 # plot(mm_shbg, cv=TRUE, las=1) #display CV score versus lambda values
 # plot(mm_shbg,pch='.', res=T, las=1, xlab='Age (years)', ylab='SHBG (nmol/L)') #plot fit with the best lambda value
 mm_shbg <- gcrq(shbg_nmol_l ~ ps(age, mon = 0, lambda = 0.4), tau = tauss, data = male, cv = T)
 
 ##Females
-fm_shbg <- gcrq(shbg_nmol_l ~ ps(age, mon = 0, lambda = seq(0, 100, l = 25)), tau = tauss, data = female, cv = T)
-#Manual adjustment of lambda did not improve fit
+# fm_shbg <-gcrq(shbg_nmol_l~ps(age, mon=0,lambda=lseq(0.01, 30, 20)), nfolds = nrow(female)-1, tau=tauss, data=female,cv=T)
+# fm_shbg$lambda #is 0.1253252
+# plot(fm_shbg, cv=TRUE, las=1) #display CV score versus lambda values
+fm_shbg <- gcrq(shbg_nmol_l ~ ps(age, mon = 0, lambda = 0.4), tau = tauss, data = female, cv = T)
 # plot(fm_shbg,pch='.', res=T, las=1, xlab='Age (years)', ylab='SHBG (nmol/L)') #plot fit with the best lambda value
 
 #Free T ####
 ##Males
-# mm_ft <-gcrq(free_t_pmol_l ~ ps(age, mon=0,lambda=seq(0,100,l=25)), tau=tauss, data=male,cv=T)
+# mm_ft <-gcrq(free_t_pmol_l~ps(age, mon=0,lambda=lseq(0.01, 30, 20)), nfolds = nrow(male)-1, tau=tauss, data=male,cv=T)
+# mm_ft$lambda #is 0.08223031
 # plot(mm_ft, cv=T)
 # plot(mm_ft,pch='.', res=T, las=1, xlab='Age (years)', ylab='Free Testosterone (pmol/L)') #plot fit with the best lambda value
 mm_ft <- gcrq(free_t_pmol_l ~ ps(age, mon = 0, lambda = 0.6), tau = tauss, data = male, cv = T)
 # plot(mm_ft,pch='.', res=T, las=1, xlab='Age (years)', ylab='Free Testosterone (pmol/L)') #plot fit with the best lambda value
 
 ##Females
-# fm_ft<-gcrq(free_t_pmol_l~ps(age, mon=0,lambda=seq(0,50,l=50)), tau=tauss, data=female,cv=T)
+# fm_ft <-gcrq(free_t_pmol_l~ps(age, mon=0,lambda=lseq(0.01, 30, 20)), nfolds = nrow(female)-1, tau=tauss, data=female,cv=T)
+# fm_ft$lambda #is 0.08223031
 # plot(fm_ft, cv=T)
 # plot(fm_ft,pch='.', res=T, las=1, xlab='Age (years)', ylab='Free Testosterone (pmol/L)') #plot fit with the best lambda value
 fm_ft <- gcrq(free_t_pmol_l ~ ps(age, mon = 0, lambda = 0.6), tau = tauss, data = female, cv = T)
@@ -260,14 +266,16 @@ fm_ft <- gcrq(free_t_pmol_l ~ ps(age, mon = 0, lambda = 0.6), tau = tauss, data 
 
 #BAT ####
 ##Males
-# mm_bat <-gcrq(bat_nmol_l~ps(age, mon=0,lambda=seq(0,50,l=50)), tau=tauss, data=male,cv=T)
+# mm_bat <-gcrq(bat_nmol_l~ps(age, mon=0,lambda=lseq(0.01, 30, 20)), nfolds = nrow(male)-1, tau=tauss, data=male,cv=T)
+# mm_bat$lambda #is 0.08223031 
 # plot(mm_bat, cv=T)
 # plot(mm_bat,pch='.', res=T, las=1, xlab='Age (years)', ylab='Bioavailable Testosterone (nmol/L)') #plot fit with the best lambda value
 mm_bat <- gcrq(bat_nmol_l ~ ps(age, mon = 0, lambda = 0.6), tau = tauss, data = male, cv = T)
 # plot(mm_bat,pch='.', res=T, las=1, xlab='Age (years)', ylab='Bioavailable Testosterone (nmol/L)') #plot fit with the best lambda value
 
 ##Females
-# fm_bat<-gcrq(bat_nmol_l~ps(age, mon=0,lambda=seq(0,50,l=50)), tau=tauss, data=female,cv=T)
+# fm_bat <-gcrq(bat_nmol_l~ps(age, mon=0,lambda=lseq(0.01, 30, 20)), nfolds = nrow(female)-1, tau=tauss, data=female,cv=T)
+# fm_bat$lambda #is 0.08223031
 # plot(fm_bat, cv=T)
 # plot(fm_bat,pch='.', res=T, las=1, xlab='Age (years)', ylab='Bioavailable Testosterone (nmol/L)') #plot fit with the best lambda value
 fm_bat <- gcrq(bat_nmol_l ~ ps(age, mon = 0, lambda = 0.6), tau = tauss, data = female, cv = T)
@@ -345,9 +353,9 @@ kable(x = female_centiles, booktabs = "TRUE", format = "latex", caption='\\label
 
 # Discussion
 
-We have demonstrated the process of generating continuous reference intervals using a pediatric dataset for T, SHBG, FT  and calculated BAT for male and female children under 20 years. Only a few studies have investigated total T reference intervals using LC-MS/MS in pediatric populations [@kushnir2010liquid; @kyriakopoulou2013sensitive; @bae2019reference; @soldin2009pediatric; @kulle2010novel]. A graphical comparison of these is shown in figure \ref{fig:fig3} showing reasonable agreement among the studies bearing in mind that the statistical analyses are performed differently and samples are differentially binned into age-categories. However, figure \ref{fig:fig3} also starkly illustrates the problem with binned reference interval studies, namely, that there are large jumps in the reference intervals seen when transitioning from one age-bin to the next. Obviously this does not reflect physiology and would induce misclassification with increasing frequency as bin sizes grow. For example in both the studies of Soldin @soldin2009pediatric and Bae @bae2019reference, a large jump of $\simeq 17-25$ nmol/L is seen in the upper limit of normal for boys after the age of 10 y and a similar phenomenon is seen in Kushnir's study @kushnir2010liquid, attenuated somewhat by the narrower bin sizes. 
+We have demonstrated the process of generating continuous reference intervals using a pediatric dataset for T, SHBG, FT  and calculated BAT for male and female children under 20 years. Only a few studies have investigated total T reference intervals using LC-MS/MS in pediatric populations [@kushnir2010liquid; @kyriakopoulou2013sensitive; @bae2019reference; @soldin2009pediatric; @kulle2010novel]. A graphical comparison of these is shown in figure 3 showing reasonable agreement among the studies bearing in mind that the statistical analyses are performed differently and samples are differentially binned into age-categories. However, figure 3 also starkly illustrates the problem with binned reference interval studies, namely, that there are large jumps in the reference intervals seen when transitioning from one age-bin to the next. Obviously this does not reflect physiology and would induce misclassification with increasing frequency as bin sizes grow. For example in both the studies of Soldin @soldin2009pediatric and Bae @bae2019reference, a large jump of $\simeq 17-25$ nmol/L is seen in the upper limit of normal for boys after the age of 10 y and a similar phenomenon is seen in Kushnir's study @kushnir2010liquid, attenuated somewhat by the narrower bin sizes. 
 
-Of note, concern has been raised about incorrect application of the Hoffmann indirect method leading to inappropriately narrow reference intervals @holmes2019widespread, which would affect the results from Soldin et al, but the material effect of this error is hard to appreciate in figure \ref{fig:fig3}. 
+Of note, concern has been raised about incorrect application of the Hoffmann indirect method leading to inappropriately narrow reference intervals @holmes2019widespread, which would affect the results from Soldin et al, but the material effect of this error is hard to appreciate in figure 3. 
 
 ```{r comparisonfig3, fig.cap = "\\label{fig:fig3}A graphical comparison of reference intervals for total tesotsterone by LC-MS/MS from various studies for male (A) and female (B) children. Lower and upper reference intervals for a given study are shown as horizontal lines.", fig.width = 5, fig.height=7}
 library(colorspace)
@@ -394,12 +402,12 @@ Pediatric reference intervals for SHBG using the Roche Cobas e411 and e601 metho
 
 We are not aware of FT or BAT pediatric reference interval studies using LC-MS/MS for the T measurement though results for the Roche Cobas e411 @zec2012reference and Abbott Architect ci4100 are reported @raizman2015pediatric. 
 
-A limitation of continuous reference intervals (and fitting any models with tuneable parameters) is the subjectivity of selection of the parameters.  In this manuscript the initial 'smoothing' parameter $\lambda$ was often sub-optimal based on visual inspection.  As a result most of these were subjectively manually chosen based on the 'best' appearing curve (no sharp increase or decreases in the tail age groups that were inconsistent with known effects of age).  By comparison, parametric and non-parametric methods don't have smoothing options and avoid the problem, but conversely suffer subjectivity in the selection of age partitions themselves.
+A limitation of continuous reference intervals (and fitting any models with tuneable parameters) is the subjectivity of selection of the parameters.  In this manuscript the initial 'smoothing' parameter $\lambda$ was sub-optimal based on visual inspection.  As a result most of these were subjectively manually chosen based on the 'best' appearing curve (no sharp increase or decreases in the tail age groups that were inconsistent with known effects of age).  By comparison, parametric and non-parametric methods don't have smoothing options and avoid the problem, but conversely suffer subjectivity in the selection of age partitions themselves.
 
 The strength of this study, and continuous reference intervals in general, is that we did not need to make any assumptions or arbitrary age partitions.  Non-parametric continuous intervals use all the data, are robust to outliers, and avoid large jumps between intervals at puberty.  Another advantage of continuous intervals is the ability to calculate point estimates for any age using the curve model.  For example, the lower, median, and upper limits for T in a female aged 14.5, is determine with the code: `round(predict(fm, newdata = data.frame(age=14.5)),2)`, yielding: `r round(predict(fm, newdata = data.frame(age=14.5)),2)`; the model is `fm`, we add our age of interest as a `data.frame` and surround the call with `round` to get 2 decimal places (as opposed to the default 8).  This can be helpful in challenging cases and part of the discussion with a clinician.  Such models may also be shared as web applications (e.g. RShiny @shiny) to allow users to generate point estimates themselves.  Though it not possible to implement fully continuous age-dependent reference intervals into a laboratory information system, point estimates naturally permit reference interval estimates that are as granular as month-by-month or year-by-year.
 
 # Conclusion
-In this study, we demonstrated the calculation of continuous reference intervals for T, SHBG, and calculated free and biovailable T in males and females under the age of 20 using the **quantregGrowth** package.  Reference intervals are an essential tool against which to evaluate results of individual patients for clinical decision-making.  Continuous reference intervals are a superior method for determining intervals where values vary with age.  Continuous intervals avoid problems with arbitrary age partitions, sharp differences between age group, and data sparsity.  In, particular non-parametric methods have advantages in using all of the data (rather than age partitions), do not require arbitrary removal of outliers, and are resistant to asymmetric, non-normality, and heteroscedastic data @quantreg2.  We attempted to describe the process of generating such intervals in a reproducible way such that readers could derive their own continuous intervals for this or other analytes. The RMarkdown source code and raw data for this paper can be downloaded at [https://github.com/drdanholmes/jmsacl_continuous_reference_interval](https://github.com/drdanholmes/jmsacl_continuous_reference_interval) and in the supplementary material.
+In this study, we demonstrated the calculation of continuous reference intervals for T, SHBG, and calculated free and biovailable T in males and females under the age of 20 using the **quantregGrowth** package.  Reference intervals are an essential tool against which to evaluate results of individual patients for clinical decision-making.  Continuous reference intervals are a superior method for determining intervals where values vary with age.  Continuous intervals avoid problems with arbitrary age partitions, sharp differences between age group, and data sparsity.  In, particular non-parametric methods have advantages in using all of the data (rather than age partitions), do not require arbitrary removal of outliers, and are resistant to asymmetric, non-normality, and heteroscedastic data @quantreg2.  We attempted to describe the process of generating such intervals in a reproducible way such that readers could derive their own continuous intervals for this or other analytes. The RMarkdown source code and raw data for this paper can be downloaded at [https://github.com/drdanholmes/jmsacl_continuous_reference_interval](https://github.com/drdanholmes/jmsacl_continuous_reference_interval) and in the supplementary material. 
 
 # Conflicts of Interest
 
@@ -413,10 +421,10 @@ The authors have no relevant conflicts of interest to disclose.
 \begin{tabular}{l|llll}
                           & \multicolumn{2}{l}{Male $\lambda$} & \multicolumn{2}{l}{Female $\lambda$} \\ \cline{2-5} 
 Hormone                   & Initial       & Final          & Initial        & Final            \\ \hline
-T                         & 1.6           & 0.4            & 0.8            & 0.7              \\
-BAT                       & 2.0           & 0.6            & 8.1            & 0.6              \\
-FT                        & 0.4           & 0.6            & 8.0            & 0.6              \\
-SHBG                      & 0.4           & unchanged      & 4.2            & unchanged       
+T                         & 0.19           & 0.4            & 12.9            & 0.7              \\
+BAT                       & 0.08           & 0.6            & 0.08            & 0.6              \\
+FT                        & 0.08           & 0.6            & 0.08            & 0.6              \\
+SHBG                      & 0.08           & unchanged     & 0.12            & unchanged       
 \end{tabular}
 \end{table}
 
