@@ -47,6 +47,9 @@ renv/
 # LaTeX files
 *.tex
 *.spl
+*.log
+*.out
+*.aux
 
 # MS Word
 *.docx
