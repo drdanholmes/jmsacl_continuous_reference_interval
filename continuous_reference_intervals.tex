@@ -134,26 +134,25 @@ Ave., Department of Paediatric Laboratory Medicine, Toronto, ON, M5G
   
   \begin{abstract}
   Testosterone (T), sex hormone binding globulin (SHBG), free
-  testosterone (FT) and/or bioavailable testosterone (BAT) are commonly
+  testosterone (FT) and bioavailable testosterone (BAT) are commonly
   employed tests in pediatric endocrinology and all require
   age-dependent reference intervals for interpretation. The common
   methods used to derive these reference intervals require decisions
   about data shape and/or age partition thresholds, which can result in
-  sharp differences between age groups, particularly in children
-  undergoing puberty. Partitioning also results in a form of data loss,
-  where data from one age-bin is completed disconnected from the next
-  age-bin. Non-parametric continuous reference intervals methods have
-  previously been developed to avoid some of these drawbacks. These
-  strategies use all the available data and smooth transitions between
-  ages avoiding partitioning. However, the fitting process inolves
-  selection and adjustment of many parameters and it can be difficult to
-  sustain a reproducible approach. Here we provide a workflow for
-  non-parametric continuous reference intervals applied to T, FT, BAT,
-  and SHBG using the R language quantregGrowth package. T measurements
-  were determined by LC-MS/MS, FT and BAT were calculated, and SHBG was
-  measured on the Roche Cobas e601. The continuous interval methodology
-  is described in detail with code examples and illustrations for
-  reproducibililty.
+  sharp differences between age groups, particularly for pubescent
+  children. Partitioning also results in a form of data loss, where data
+  from one age-bin is completed disconnected from the adjacent age-bins.
+  Non-parametric continuous reference intervals methods have previously
+  been developed to avoid some of these drawbacks. These strategies use
+  all the available data and smooth transitions between ages avoiding
+  partitioning. However, the fitting process inolves selection and
+  adjustment of many parameters and it can be difficult to maintain a
+  reproducible approach. Here we provide a workflow for non-parametric
+  continuous reference intervals applied to T, FT, BAT, and SHBG using
+  the R language quantregGrowth package. T measurements were determined
+  by LC-MS/MS, FT and BAT were calculated, and SHBG was measured on the
+  Roche Cobas e601. The continuous interval methodology is described in
+  detail with code examples and illustrations for reproducibililty.
   \end{abstract}
   
  \end{frontmatter}
@@ -162,13 +161,13 @@ Ave., Department of Paediatric Laboratory Medicine, Toronto, ON, M5G
 \section{Introduction}\label{introduction}}
 
 Measurements of testosterone (T), sex hormone binding globulin (SHBG),
-free testosterone (FT) and/or bioavailable testosterone (BAT) are common
-in pediatric endocrinology for investigation of ambiguous genitalia,
+free testosterone (FT) and bioavailable testosterone (BAT) are common in
+pediatric endocrinology for investigation of ambiguous genitalia,
 precocious puberty, and premature adrenarche. Age-dependent reference
-intervals for T as measured by liquid chromatography and tandem mass
-spectrometry (LC-MS/MS) have been previously investigated in a number of
-studies using a number of statistical procedures including, the Hoffmann
-method {[}1{]}, various partitioning strategies {[}2--6{]}, and
+intervals for T, as measured by liquid chromatography and tandem mass
+spectrometry (LC-MS/MS), have been previously investigated in a number
+of studies using a number of statistical procedures including, the
+Hoffmann method {[}1{]}, various partitioning strategies {[}2--6{]}, and
 continuous fitting procedures {[}7{]}.
 
 Statistical strategies for continuous fitting of age-dependent centiles
@@ -201,14 +200,14 @@ the process of performing such an analysis using the
 Becton Dickenson and Greiner red top serum samples were obtained from
 British Columbia Children's and Women's Hospital after routine analysis
 for reactivity to allergens. After routine clinical analysis, specimens
-were sequestered, anonymized and decanted to 12 x 75 mm polystyrene
-tubes and frozen at -80 \(^{\circ}\)C. No clinical exclusion criteria
-were applied to the cohort. These samples were then transferred to
-St.~Paul's Hospital laboratory for the analysis of T and SHBG. SHBG was
-measured within 2 months of receipt while T analysis was delayed for 3
-years. Stability studies for SHBG have shown only modest changes at -25
-\(^{\circ}\)C for 25 years {[}16{]} while T is similarly unaffected by
-years of storage at -80 \(^{\circ}\)C when measured by LC-MS/MS
+were sequestered, anonymized and decanted to \(12\times 75\) mm
+polystyrene tubes and frozen at -80 \(^{\circ}\)C. No clinical exclusion
+criteria were applied to the cohort. These samples were then transferred
+to St.~Paul's Hospital laboratory for the analysis of T and SHBG. SHBG
+was measured within 2 months of receipt while T analysis was delayed for
+3 years. Stability studies for SHBG have shown only modest changes at
+-25 \(^{\circ}\)C for 25 years {[}16{]} while T is similarly unaffected
+by years of storage at -80 \(^{\circ}\)C when measured by LC-MS/MS
 {[}17{]}.
 
 \hypertarget{biochemical-analysis}{%
@@ -273,10 +272,10 @@ female <- testo[testo$gender=='F',]
 # Create a variable with the appropriate centiles for use below: 
 tauss <- c(0.025,0.5,0.975)
 
-#Call for cross-validation with a range of lambda smoothing values in Males:
+# Call for cross-validation with a range of lambda smoothing values in males:
 mm <- gcrq(t_nmol_l ~ ps(age,
                 mon = 0,
-                lambda = lseq(0.01, 30, l = 25)),
+                lambda = lseq(0.01, 30, l = 20)),
                 nfolds = nrow(male)-1,
                 tau = tauss,
                 data = male,
@@ -312,11 +311,11 @@ option to perform cross-validation to automatically identify the
 between fitting the line through most points and being too ``wiggly''
 (overfit). The \texttt{ps()} function determines smoothness using a
 penalty term, \(\lambda\), which is an error multiplier of how rough
-(wiggly) the curve is. The smaller the lambda, the smaller the penalty
-and the rougher the curve. The term \texttt{nfolds} refers to the number
-of groups for cross-validation. By setting it to the sample size minus
-one, it is leave one out cross-over validation (each data point is
-excluded in turn and tested for fit).
+(wiggly) the curve is. The smaller the \(\lambda\), the smaller the
+penalty and the rougher the curve. The term \texttt{nfolds} refers to
+the number of groups for cross-validation. By setting it to the sample
+size minus one, it is leave one out cross-over validation (each data
+point is excluded in turn and tested for fit).
 
 In figure 1, we illustrate the effect of different smoothing values for
 \(\lambda\). Setting a \(\lambda\) smoothing term of 0.01 shows
@@ -332,7 +331,7 @@ Instead of manually picking \(\lambda\), in the \texttt{ps()} function
 above, we provided a sequence of numbers, coded as:
 \texttt{lambda\ =\ lseq(0.01,\ 30,\ l=20)}, which is a logarithmic
 sequence of numbers from 0.01 to 30 of length 20
-(0.01,0.015,0.023\ldots30). By feeding \texttt{ps()} this sequence of
+(0.01,0.015,0.023\ldots30). By providing \texttt{ps()} this sequence of
 numbers, the \texttt{gcrq} fitting function will calculate the T vs.~age
 curve for all those \(\lambda\) smoothing values and identify the
 optimum (smoothest curve that still passes closest to the points) using
@@ -377,10 +376,10 @@ Continuous intervals were determined for males and females between the
 ages of 6 months to 19 years for females (N=195) and 1 month to 19 years
 for males (N=226)---see tables \ref{tab:tab1} and \ref{tab:tab2} as well
 as figure 2. Intervals were calculated using non-parametric quantile
-regression for total T, SHBG, calculated free and bioavailable T. In
-both males and females, T values peaked in the age range of puberty,
-males being \(\simeq 10 \times\) higher. SHBG showed varying patterns
-with age, differing between males and females.
+regression for total T, SHBG, calculated FT and BAT. In both males and
+females, T values peaked in the age range of puberty, males being
+\(\simeq 10 \times\) higher. SHBG showed varying patterns with age,
+differing between males and females.
 
 Confidence intervals were provided for the reference interval estimates,
 with higher variability around the tails of the intervals. Predictions
@@ -546,7 +545,7 @@ were not diluted and re-run so as to obtain a numerical result--all
 results \(>200\) are replaced with 200.
 
 We are not aware of FT or BAT pediatric reference interval studies using
-LC-MS/MS for the T measurement though results for the Roche Cobas e411
+LC-MS/MS for the T measurement, though results for the Roche Cobas e411
 {[}31{]} and Abbott Architect ci4100 are reported {[}32{]}.
 
 A limitation of continuous reference intervals (and fitting any models
@@ -611,7 +610,7 @@ The authors have no relevant conflicts of interest to disclose.
 \section{Supplemental Data}\label{supplemental-data}}
 
 \begin{table}[]
-\caption*{Supplemental Table 1: Initial and final smoothing (lambda) values. The reader will note that the initial value of the $\lambda$ parameter was more than $10\times$ the final value for female T. This is because the cross-validation score for the fit did not improve appreciably for values of $\lambda > 0.7$.  This justifies selecting a value having a less restrictive fit, which is ultimately a judgement call. }
+\caption*{Supplemental Table 1: Initial and final smoothing ($\lambda$) values. The reader will note that the initial value of the $\lambda$ parameter was more than $10\times$ the final value for female T, in contrast to the initial values for the other parameters which are on the same order of magnitude as their final values. This is because the cross-validation score for the fit did not improve appreciably for values of $\lambda$ between about 0.7 and 30.  Howevever, the larger values of $\lambda$ result in underfitting, justifying the selection of a lower value resulting in a less restrictive fit. Ultimately, this is a judgement call. }
 \label{tab:my-table}
 \begin{tabular}{l|llll}
                           & \multicolumn{2}{l}{Male $\lambda$} & \multicolumn{2}{l}{Female $\lambda$} \\ \cline{2-5} 
