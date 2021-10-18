@@ -309,7 +309,7 @@ points, which is not ideal for reproducible research. To address this,
 the \texttt{ps()} function uses a \textbf{penalized spline} with the
 option to perform cross-validation to automatically identify the
 \textbf{best} smoothness. In this case, \textbf{best} is the balance
-between fitting the line through each points and being too ``wiggly''
+between fitting the line through most points and being too ``wiggly''
 (overfit). The \texttt{ps()} function determines smoothness using a
 penalty term, \(\lambda\), which is an error multiplier of how rough
 (wiggly) the curve is. The smaller the lambda, the smaller the penalty
@@ -319,7 +319,7 @@ one, it is leave one out cross-over validation (each data point is
 excluded in turn and tested for fit).
 
 In figure 1, we illustrate the effect of different smoothing values for
-\(\lambda\). Setting a \(\lambda\) smoothing term of zero shows
+\(\lambda\). Setting a \(\lambda\) smoothing term of 0.01 shows
 overfitting, particularly \textgreater15 years old, whereas high
 \(\lambda\) values tend to underfit the data in a way won't accurately
 predict T at older ages.
@@ -328,18 +328,18 @@ predict T at older ages.
 \includegraphics{smoothingfig1-1} \caption{\label{fig:fig1}Comparison of different smoothing values ($\lambda$) for continuous reference interval curves for T in males. Upper curve (green) is 97.5th, median (red), and lower 2.5th (black).}\label{fig:smoothingfig1}
 \end{figure}
 
-Instead of manually picking \(\lambda\), in the \texttt{ps} function
+Instead of manually picking \(\lambda\), in the \texttt{ps()} function
 above, we provided a sequence of numbers, coded as:
-\texttt{lambda\ =\ lseq(0.01,30,l=20)}, which is a logarithmic sequence
-of numbers from 0.01 to 30 of length 20 (0.01, 0.014, 0.0.19, \ldots,
-21.49, 30). By feeding \texttt{ps()} this sequence of numbers, the
-\texttt{gcrq} fitting function will calculate the T vs.~age curve for
-all those \(\lambda\) smoothing values and identify the optimum
-(smoothest curve that still passes closest to the points) using
+\texttt{lambda\ =\ lseq(0.01,\ 30,\ l=20)}, which is a logarithmic
+sequence of numbers from 0.01 to 30 of length 20
+(0.01,0.015,0.023\ldots30). By feeding \texttt{ps()} this sequence of
+numbers, the \texttt{gcrq} fitting function will calculate the T vs.~age
+curve for all those \(\lambda\) smoothing values and identify the
+optimum (smoothest curve that still passes closest to the points) using
 cross-validation. In the cross-validation, the curve is calculated using
 a subset of data points and the accuracy of the fit of the left out
 points is assessed iteratively. Using cross-validation, the optimum
-\(\lambda\) value for T in males was 0.19.
+\(\lambda\) value for T in males was 0.14.
 
 While cross-validation selects an optimum based on error residuals,
 complete automation is seldom perfect and it is appropriate to visually
@@ -611,15 +611,15 @@ The authors have no relevant conflicts of interest to disclose.
 \section{Supplemental Data}\label{supplemental-data}}
 
 \begin{table}[]
-\caption*{Supplemental Table 1: Initial and Final Smoothing (lambda) Values}
+\caption*{Supplemental Table 1: Initial and final smoothing (lambda) values. The reader will note that the initial value of the $\lambda$ parameter was more than $10\times$ the final value for female T. This is because the cross-validation score for the fit did not improve appreciably for values of $\lambda > 0.7$.  This justifies selecting a value having a less restrictive fit, which is ultimately a judgement call. }
 \label{tab:my-table}
 \begin{tabular}{l|llll}
                           & \multicolumn{2}{l}{Male $\lambda$} & \multicolumn{2}{l}{Female $\lambda$} \\ \cline{2-5} 
 Hormone                   & Initial       & Final          & Initial        & Final            \\ \hline
-T                         & 0.19           & 0.4            & 12.9            & 0.7              \\
-BAT                       & 0.08           & 0.6            & 0.08            & 0.6              \\
-FT                        & 0.08           & 0.6            & 0.08            & 0.6              \\
-SHBG                      & 0.08           & unchanged     & 0.12            & unchanged       
+T                         & 0.19           & 0.4            & 12.9          & 0.7              \\
+BAT                       & 0.08           & 0.6            & 0.08          & 0.6              \\
+FT                        & 0.08           & 0.6            & 0.08          & 0.6              \\
+SHBG                      & 0.08           & 0.08           & 0.12          & 0.12       
 \end{tabular}
 \end{table}
 
