@@ -157,6 +157,23 @@ Ave., Department of Paediatric Laboratory Medicine, Toronto, ON, M5G
   
  \end{frontmatter}
 
+\hypertarget{abbreviations}{%
+\section{Abbreviations}\label{abbreviations}}
+
+BAT: bioavailable testosterone
+
+FT: free testosterone
+
+GAMLSS: generalized additive models for location, scale and shape
+
+SHGB: sex hormone binding globulin
+
+LC-MS/MS: liquid chromatography and tandem mass spectrometry
+
+LMS: lambda, mu and sigma
+
+T: testosterone
+
 \hypertarget{introduction}{%
 \section{Introduction}\label{introduction}}
 
@@ -176,7 +193,7 @@ curves {[}8{]} but in time, these strategies have been applied to
 age-dependent biochemical and hematological parameters. There are
 numerous approaches to the problem, each addressing challenges of
 heteroscedasticity and non-normality in the raw data in different ways.
-Some of the more popular approaches include the those of Healy {[}8{]},
+Some of the more popular approaches include those of Healy {[}8{]},
 Cole's lambda, mu and sigma (LMS) method {[}9{]}, Royston's fractional
 polynomial method {[}10{]}, the generalized additive models for
 location, scale and shape (GAMLSS) method {[}11{]} and quantile
@@ -213,14 +230,14 @@ by years of storage at -80 \(^{\circ}\)C when measured by LC-MS/MS
 \hypertarget{biochemical-analysis}{%
 \subsection{Biochemical Analysis}\label{biochemical-analysis}}
 
-T analysis was performed using a modification French's method {[}18{]}
-as previously described {[}19{]}. Briefly, liquid-liquid extraction was
-performed on 100 µL of sample/calibrator with 40 µL of internal standard
-(d3-testosterone at 11.7 nmol/L; 337 ng/dL) using 0.75 mL of
-hexane:ethyl acetate in a 96-well format using a Hamilton Starlet
-robotic liquid handler. After vortexing for 3 minutes, samples were
-centrifuged in plate for 10 min at 3000 rpm (948 g). Following
-centrifugation, 500 µL of the organic later was transferred to a second
+T analysis was performed using a modification of French's method
+{[}18{]}, as previously described {[}19{]}. Briefly, liquid-liquid
+extraction was performed on 100 µL of sample/calibrator with 40 µL of
+internal standard (d3-testosterone at 11.7 nmol/L; 337 ng/dL) using 0.75
+mL of 9:1 hexane:ethyl acetate in a 96-well format using a Hamilton
+Starlet robotic liquid handler. After vortexing for 3 minutes, samples
+were centrifuged in plate for 10 min at 3000 rpm (948 g). Following
+centrifugation, 500 µL of the organic later were transferred to a second
 96-well plate and evaporated under air warmed to 45 \(^{\circ}\)C
 followed by reconstitution with 200 µL of 75:25 (0.1\% formic acid in
 water):(0.1\% formic acid, 2 mM ammonium acetate in 70:30
@@ -249,7 +266,7 @@ assumptions about symmetry, normality, linearity, and
 heteroscedasticity. The lower 2.5th and upper 97.5th centiles were
 modeled using the \textbf{quantregGrowth} {[}21,22{]}, package using R
 version 4.1. Initial curve smoothing was done with penalized splines
-with 10-fold cross-validation as previously described {[}23{]}.
+with 10-fold cross-validation, as previously described {[}23{]}.
 
 To reproduce the analysis, the steps are to load the necessary R
 packages, import the data, split into male and female dataframes, and
@@ -287,12 +304,12 @@ Breaking down the last lines of the cross-validation call shown above,
 we used the function for the continuous age-dependent centile curve,
 \texttt{gcrq}. The \texttt{gcrq} function, an acronym for
 \texttt{growth\ chart\ regression\ quantile}, is part of the
-\textbf{quantregGrowth} package and has a series required of arguments
-(``parameters''). The \texttt{gcrq} function requirements are: 1) the
-formula containing the variables of interest (age and T), 2) the centile
-or centiles (the variable we've called \texttt{tauss}, which has the
-lower 2.5th, median, and upper 97.5) and 3) the source dataframe with
-the variables, in this case \texttt{male}.
+\textbf{quantregGrowth} package and has a series of required of
+arguments (``parameters''). The \texttt{gcrq} function requirements are:
+1) the formula containing the variables of interest (age and T), 2) the
+centile or centiles (the variable we've called \texttt{tauss}, which has
+the lower 2.5th, median, and upper 97.5) and 3) the source dataframe
+with the variables, in this case \texttt{male}.
 
 In R, formulae have a standard format of
 \texttt{dependent\ variable\ \textasciitilde{}\ predictor\ variable}. In
@@ -330,15 +347,15 @@ predict T at older ages.
 Instead of manually picking \(\lambda\), in the \texttt{ps()} function
 above, we provided a sequence of numbers, coded as:
 \texttt{lambda\ =\ lseq(0.01,\ 30,\ l=20)}, which is a logarithmic
-sequence of numbers from 0.01 to 30 of length 20
-(0.01,0.015,0.023\ldots30). By providing \texttt{ps()} this sequence of
-numbers, the \texttt{gcrq} fitting function will calculate the T vs.~age
-curve for all those \(\lambda\) smoothing values and identify the
-optimum (smoothest curve that still passes closest to the points) using
+sequence of numbers from 0.01 to 30 of length 20 (0.01, 0.015,
+0.023\ldots30). By providing \texttt{ps()} this sequence of numbers, the
+\texttt{gcrq} fitting function will calculate the T vs.~age curve for
+all those \(\lambda\) smoothing values and identify the optimum
+(smoothest curve that still passes closest to the points) using
 cross-validation. In the cross-validation, the curve is calculated using
 a subset of data points and the accuracy of the fit of the left out
 points is assessed iteratively. Using cross-validation, the optimum
-\(\lambda\) value for T in males was 0.14.
+\(\lambda\) value for T in males was 0.19.
 
 While cross-validation selects an optimum based on error residuals,
 complete automation is seldom perfect and it is appropriate to visually
@@ -362,9 +379,9 @@ concave-up or concave-down. The interested reader is referred to the
 package documentation {[}21,22{]}.
 
 The confidence intervals (95\%) of the fits were determined using the
-sandwich formula built into the \textbf{quantregGrowth} package {[}24{]}
-but bootstrapping can optionally be selected. Confidence intervals with
-shading are plotted using with the code:
+sandwich formula built into the \textbf{quantregGrowth} package
+{[}24{]}, but bootstrapping can optionally be selected. Confidence
+intervals with shading are plotted using the code:
 \texttt{plot(mm,\ conf.level\ =\ .95,\ shade\ =\ T)}. Negative interval
 predictions were rounded to zero. Finally, the manuscript was made
 reproducible using the \textbf{renv} package {[}25{]}.
@@ -387,7 +404,7 @@ outside the age interval (extrapolation) are not expected to be accurate
 given the absence of data.
 
 \begin{figure}[H]
-\includegraphics{quantregfitsfig2-1} \caption{\label{fig:fig2}Non-parametric continuous pediatric reference intervals for T, SHBG, BAT and FT in males (left) and females (right) showing confidence intervals calculated using the sandwich formula [15]. The initial optimum and final lambda values are providied in Supplemental Table 1.}\label{fig:quantregfitsfig2}
+\includegraphics{quantregfitsfig2-1} \caption{\label{fig:fig2}Non-parametric continuous pediatric reference intervals for T, SHBG, BAT and FT in males (left) and females (right) showing confidence intervals calculated using the sandwich formula [15]. The initial optimum and final $\lambda$ values are providied in supplemental table 1.}\label{fig:quantregfitsfig2}
 \end{figure}
 
 \begin{table}[H]
@@ -512,14 +529,14 @@ have a shallower slope than is required to accurately reflect
 physiology. In this context, a dedicated (i.e.~binned) analysis of
 results for patients less than 1 year of age may be warranted.
 
-Another weakness of this study is that androgen and SHBG concentration
-is dependent on Tanner Stage for pubescent males and females and are
+Another weakness of this study is that androgen and SHBG concentrations
+are dependent on Tanner Stage for pubescent males and females and are
 also affected by phase of the menstrual cycle and/or the use of oral
 contraceptives. Given the anonymity of the specimens, this information
 was not available.
 
 This study has also not taken into account the fact that median albumin
-concentrations by age are not fixed at 43 g/L throughout life but show
+concentrations by age are not fixed at 43 g/L throughout life, but show
 age-dependence, being lower in early childhood--especially in the
 neonatal period and in children under 4 years {[}29{]}. While we
 acknowledge this, attempts to address it would not have practical
@@ -533,15 +550,15 @@ the patient, then results will be interpretable, though not applicable
 to other analytical methodologies.
 
 Pediatric reference intervals for SHBG using the Roche Cobas e411 and
-e601 methods have been reported previously {[}28,31{]} though our
+e601 methods have been reported previously {[}28,31{]}, though our
 results can only be superficially compared because of differences in
-biochemical and statistical analysis. Zec et al only provide reference
-interval results for children aged 1--10 y and obtain results of
-22.7--166.5 nmol/L for females and 21.5--186.2 nmol/L for boys. While
+biochemical and statistical analysis. Zec et al {[}31{]} only provide
+reference interval results for children aged 1--10 y and obtain results
+of 22.7--166.5 nmol/L for females and 21.5--186.2 nmol/L for boys. While
 these do not seem incompatible with the present study, detailed
 comparison is not possible. The more recent study from the CALIPER group
 {[}28{]} is also difficult to compare because samples \(>200\) nmol/L
-were not diluted and re-run so as to obtain a numerical result--all
+were not diluted and re-run so as to obtain a numerical result --- all
 results \(>200\) are replaced with 200.
 
 We are not aware of FT or BAT pediatric reference interval studies using
@@ -566,7 +583,7 @@ are robust to outliers, and avoid large jumps between intervals at
 puberty. Another advantage of continuous intervals is the ability to
 calculate point estimates for any age using the curve model. For
 example, the lower, median, and upper limits for T in a female aged
-14.5, is determine with the code:
+14.5, is determined with the code:
 \texttt{round(predict(fm,\ newdata\ =\ data.frame(age=14.5)),2)},
 yielding: 0.06, 0.56, 1.49; the model is \texttt{fm}, we add our age of
 interest as a \texttt{data.frame} and surround the call with
@@ -590,7 +607,7 @@ evaluate results of individual patients for clinical decision-making.
 Continuous reference intervals are a superior method for determining
 intervals where values vary with age. Continuous intervals avoid
 problems with arbitrary age partitions, sharp differences between age
-group, and data sparsity. In, particular non-parametric methods have
+group, and data sparsity. In particular, non-parametric methods have
 advantages in using all of the data (rather than age partitions), do not
 require arbitrary removal of outliers, and are resistant to asymmetric,
 non-normality, and heteroscedastic data {[}22{]}. We attempted to
@@ -609,7 +626,7 @@ The authors have no relevant conflicts of interest to disclose.
 \hypertarget{supplemental-data}{%
 \section{Supplemental Data}\label{supplemental-data}}
 
-\begin{table}[]
+\begin{table}[H]
 \caption*{Supplemental Table 1: Initial and final smoothing ($\lambda$) values. The reader will note that the initial value of the $\lambda$ parameter was more than $10\times$ the final value for female T, in contrast to the initial values for the other parameters which are on the same order of magnitude as their final values. This is because the cross-validation score for the fit did not improve appreciably for values of $\lambda$ between about 0.7 and 30.  Howevever, the larger values of $\lambda$ result in underfitting, justifying the selection of a lower value resulting in a less restrictive fit. Ultimately, this is a judgement call. }
 \label{tab:my-table}
 \begin{tabular}{l|llll}
